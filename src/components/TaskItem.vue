@@ -1,7 +1,11 @@
 <template>
   <q-item class="q-pa-sm q-card q-rounded-borders bg-white">
     <q-item-section side>
-      <q-checkbox v-model="completed" color="teal" />
+      <q-checkbox
+        v-model="completed"
+        @update:model-value="onCheckboxChange"
+        color="teal"
+      />
     </q-item-section>
     <q-item-section>
       <q-item-label>{{ title }}</q-item-label>
@@ -14,7 +18,7 @@
           class="q-px-sm"
           rounded
         >
-          {{ tag }}
+          {{ tag.name }}
         </q-badge>
       </q-item-label>
       <q-item-label caption>
@@ -28,26 +32,32 @@
   </q-item>
 </template>
 <script setup lang="ts">
-import { inject, ref, watch } from "vue";
+import { inject, ref } from "vue";
 import TaskMenuSettings from "./TaskMenuSettings.vue";
-import type { Task } from "src/services/interfaces";
 
 const props = defineProps<{
   id: string;
   state: boolean;
   title: string;
-  keywords: Array<string>;
+  keywords: Array<{ id: string; name: string }>;
 }>();
 
 const completed = ref(props.state);
 
 const tasksContext = inject<{
-  editTask: (id: string, newValue: Task) => void;
+  toogleTask: (id: string) => Promise<void>;
 }>("tasksContext");
 
-watch(completed, (newVal) => {
-  if (tasksContext) {
-    tasksContext.editTask(props.id, { ...props, state: newVal });
+async function onCheckboxChange() {
+  try {
+    if (tasksContext) {
+      await tasksContext.toogleTask(props.id);
+    }
+  } catch (error) {
+    // Revert the checkbox state in case of an error
+    completed.value = !completed.value;
+    if (process.env.NODE_ENV == "development")
+      console.error("Error toggling task state:", error);
   }
-});
+}
 </script>

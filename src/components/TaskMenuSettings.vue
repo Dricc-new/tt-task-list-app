@@ -19,6 +19,6 @@ const menuShow = ref(false);
 
 const tasksContext = inject<{
   deleteTask: (id: string) => void;
-  selectTaskToEdit: (id: string) => void;
+  selectTaskToEdit: (id: string | null) => void;
 }>("tasksContext");
 </script>
